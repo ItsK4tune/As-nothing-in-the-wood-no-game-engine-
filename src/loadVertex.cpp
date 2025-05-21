@@ -1,0 +1,36 @@
+#include "util/loadVertex.h"
+#include "util/struct/struct.h"
+
+void loadVertexFile(const std::string &filepath, std::vector<Vertex> &vertices)
+{
+    std::string fullPath = "../vertex/" + filepath;
+    std::ifstream file(fullPath);
+    if (!file.is_open())
+    {
+        std::cerr << "Cannot open file: " << fullPath << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file, line))
+    {
+        std::istringstream iss(line);
+        float x, y, z, u, v, nx, ny, nz, r, g, b;
+        if (!(iss >> x >> y >> z >> u >> v >> nx >> ny >> nz >> r >> g >> b))
+        {
+            std::cerr << "Format error at: " << line << std::endl;
+            continue;
+        }
+
+        Vertex vertex;
+        vertex.pos = glm::vec3(x, y, z);
+        vertex.uv = glm::vec2(u, v);
+        vertex.normal = glm::vec3(nx, ny, nz);
+        vertex.color = glm::vec3(r, g, b);
+
+        vertices.push_back(vertex);
+    }
+
+    file.close();
+    return;
+}

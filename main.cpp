@@ -1,58 +1,112 @@
 #include <GLAD/glad.h>
 #include <GLFW/glfw3.h>
+#include <iostream>
+#include <sstream>
 
 #include "util/init.h"
 #include "util/line.h"
+#include "util/object.h"
 #include "util/camera.h"
+#include "util/input.h"
+#include "util/loadShader.h"
+#include "util/loadVertex.h"
 
 int main()
 {
-    GLFWwindow *window = createWindow(800, 600);
+    GLFWwindow *window = createWindow(-1, -1);
+    configWindow(window);
 
     Camera camera(
-        glm::vec3(0.0f, 0.0f, -6.0f), // position
-        glm::vec3(0.0f, 0.0f, 1.0f),  // target (hướng nhìn)
-        glm::vec3(0.0f, 1.0f, 0.0f),  // up vector
-        90.0f,                        // FOV (độ)
-        16.0f / 9.0f,                 // aspect ratio
-        0.1f,                         // near plane
-        100.0f                        // far plane
-    );
+        glm::vec3(0.0f, 0.0f, -6.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        90.0f,
+        16.0f / 9.0f,
+        0.1f,
+        100.0f);
+    globalCamera = &camera;
 
-    Line simpleLine;
+    // Viền
+    Line outline;
 
     std::vector<Vertex> vertices;
-    vertices.push_back({glm::vec3(0.5f, 0.0f, 0.0f), glm::vec2(0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)});
-    vertices.push_back({glm::vec3(-0.5f, 0.0f, 0.0f), glm::vec2(0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)});
-    vertices.push_back({glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec2(0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f)});
-    vertices.push_back({glm::vec3(0.5f, 0.5f, 0.0f), glm::vec2(0.0f), glm::vec3(0.0f), glm::vec3(0.0f)});
+    loadVertexFile("line.vertex", vertices);
 
-    Mesh simpleLineMesh(vertices);
+    Mesh outlineMesh(vertices);
+    outline.setMesh(outlineMesh);
 
-    simpleLine.setMesh(simpleLineMesh);
+    Shader outlineShader("outline/basic.vert", "outline/basic.frag");
+    outline.setShader(outlineShader);
 
-    Shader simpleLineShader("shader/line/basic.vert", "shader/line/basic.frag");
+    // Main object
+    Object box;
 
-    simpleLine.setShader(simpleLineShader);
+    loadVertexFile("box.vertex", vertices);
+
+    Mesh boxMesh(vertices);
+    box.setMesh(boxMesh);
+
+    Shader boxShader("box/basic.vert", "box/basic.frag");
+    box.setShader(boxShader);
+
+    double lastTime = glfwGetTime();
+    int frames = 0;
+
+    float lastFrame = glfwGetTime();
+
+    float soundRadius = 0.1f;
 
     while (!glfwWindowShouldClose(window))
     {
-        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        float currentFrame = glfwGetTime();
+        float delta = currentFrame - lastFrame;
+        lastFrame = currentFrame;
 
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, simpleLine.getPosition());
+        frames++;
+        if (currentFrame - lastTime >= 1.0)
+        {
+            std::stringstream ss;
+            ss << "As nothing in the wood - FPS: " << frames;
+            glfwSetWindowTitle(window, ss.str().c_str());
+            frames = 0;
+            lastTime += 1.0;
+        }
+
+        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glm::mat4 view = camera.getViewMatrix();
         glm::mat4 projection = camera.getProjectionMatrix();
 
-        simpleLine.use();
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
 
-        simpleLine.getShader().setMat4("model", model);
-        simpleLine.getShader().setMat4("view", view);
-        simpleLine.getShader().setMat4("projection", projection);
+        bool triggerSoundRing = soundWaveInput(window, soundRadius, delta);
 
-        simpleLine.drawLineLoop(20.0f);
+        box.use();
+
+        box.getShader().setMat4("model", model);
+        box.getShader().setMat4("view", view);
+        box.getShader().setMat4("projection", projection);
+        box.getShader().setVec3("cameraPos", camera.getPosition());
+        box.getShader().setFloat("soundRadius", soundRadius);
+        if (triggerSoundRing)
+            box.getShader().setBool("useColor", 0);
+        else
+            box.getShader().setBool("useColor", 1);
+
+        box.draw();
+
+        outline.use();
+
+        outline.getShader().setMat4("model", model);
+        outline.getShader().setMat4("view", view);
+        outline.getShader().setMat4("projection", projection);
+        outline.getShader().setVec3("cameraPos", camera.getPosition());
+        outline.getShader().setFloat("soundRadius", soundRadius);
+        outline.getShader().setBool("useColor", 0);
+
+        outline.drawLine(10.0f);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

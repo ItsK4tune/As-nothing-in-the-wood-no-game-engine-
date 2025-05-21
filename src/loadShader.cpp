@@ -3,9 +3,9 @@
 #include <fstream>
 #include <sstream>
 
-std::string loadShaderSource(const char *filepath)
+std::string loadShaderSource(const std::string filepath)
 {
-    std::string fullPath = std::string("../") + filepath;
+    std::string fullPath = std::string("../shader/") + filepath;
 
     std::ifstream file(fullPath);
     if (!file.is_open())
@@ -38,7 +38,7 @@ unsigned int compileShader(unsigned int type, const char *source)
     return shader;
 }
 
-unsigned int createShaderProgram(const char *inVert, const char *inFrag)
+unsigned int createShaderProgram(const std::string inVert, const std::string inFrag)
 {
     std::string vertexSource = loadShaderSource(inVert);
     std::string fragmentSource = loadShaderSource(inFrag);

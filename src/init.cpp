@@ -1,5 +1,5 @@
 #include "util/init.h"
-// #include "util/input.h"
+#include "util/input.h"
 #include <iostream>
 
 GLFWwindow *createWindow(int width, int height)
@@ -16,7 +16,7 @@ GLFWwindow *createWindow(int width, int height)
         GLFWmonitor *primaryMonitor = glfwGetPrimaryMonitor();
         const GLFWvidmode *mode = glfwGetVideoMode(primaryMonitor);
 
-        window = glfwCreateWindow(mode->width, mode->height, "OpenGL renderWindow", primaryMonitor, NULL);
+        window = glfwCreateWindow(mode->width, mode->height, "As nothing in the wood", primaryMonitor, NULL);
     }
     else
     {
@@ -37,10 +37,15 @@ GLFWwindow *createWindow(int width, int height)
     return window;
 }
 
-// void configWindow(GLFWwindow *window)
-// {
-//     glfwSetKeyCallback(window, key_callback);
-//     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-//     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-//     glfwSetCursorPosCallback(window, cursor_position_callback);
-// }
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+}
+
+void configWindow(GLFWwindow *window)
+{
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
+}

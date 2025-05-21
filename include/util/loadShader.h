@@ -4,4 +4,4 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-unsigned int createShaderProgram(const char *inVert, const char *inFrag);
+unsigned int createShaderProgram(const std::string inVert, const std::string inFrag);
