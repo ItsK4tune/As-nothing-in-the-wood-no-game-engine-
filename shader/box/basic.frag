@@ -9,6 +9,8 @@ uniform bool useColor;
 uniform int soundCount;
 uniform vec3 soundPositions[MAX_SOUND_POINTS];
 uniform float soundRadii[MAX_SOUND_POINTS];
+uniform float soundMaxRadii[MAX_SOUND_POINTS];
+uniform bool soundIsGrowing[MAX_SOUND_POINTS];
 
 out vec4 FragColor;
 
@@ -21,8 +23,9 @@ void main()
             float dist = length(soundPositions[i] - vWorldPos);
             float delta = abs(dist - soundRadii[i]);
 
-            if (delta < 0.05) {
-                float brightness = 1.0 - clamp(delta / 0.05, 0.0, 1.0);
+            if (delta < 0.01 && soundIsGrowing[i]) {
+                float ratio = clamp(soundRadii[i] / soundMaxRadii[i], 0.0, 1.0);
+                float brightness = pow(1.0 - ratio, 0.8);
                 color = max(color, vec3(brightness));
             }
         }

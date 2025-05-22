@@ -57,6 +57,7 @@ struct Shader
     void setFloatArray(const std::string &name, const std::vector<float> &array) const;
     void setInt(const std::string &name, int val) const;
     void setBool(const std::string &name, bool val) const;
+    void setBoolArray(const std::string &name, const std::vector<bool> &array) const;
 
     unsigned int getID() const;
 };

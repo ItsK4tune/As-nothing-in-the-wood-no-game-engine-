@@ -133,6 +133,16 @@ void Shader::setBool(const std::string &name, bool val) const
     glUniform1i(glGetUniformLocation(ID, name.c_str()), val);
 }
 
+void Shader::setBoolArray(const std::string &name, const std::vector<bool> &array) const
+{
+    std::vector<int> intArray(array.begin(), array.end());
+
+    glUniform1iv(
+        glGetUniformLocation(ID, name.c_str()),
+        static_cast<GLsizei>(intArray.size()),
+        intArray.data());
+}
+
 unsigned int Shader::getID() const
 {
     return ID;

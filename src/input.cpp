@@ -50,7 +50,7 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos)
     }
 }
 
-void moveInput(GLFWwindow *window, float deltaTime)
+void ghostMoveInput(GLFWwindow *window, float deltaTime)
 {
     if (!globalCamera)
         return;
@@ -99,6 +99,38 @@ void moveInput(GLFWwindow *window, float deltaTime)
     model = createAffineTransformMatrix(objectScale, objectRotation, glm::vec3(0.0f));
 }
 
+void normalMoveInput(GLFWwindow *window, float deltaTime)
+{
+    if (!globalCamera)
+        return;
+
+    float baseSpeed = 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        baseSpeed = 2.0f;
+
+    float speed = baseSpeed * deltaTime;
+
+    if (!speed)
+        return;
+
+    glm::vec3 forward = glm::normalize(glm::vec3(globalCamera->getTarget().x, globalCamera->getPosition().y, globalCamera->getTarget().z) - globalCamera->getPosition());
+    glm::vec3 right = glm::normalize(glm::cross(forward, globalCamera->getUp()));
+    glm::vec3 up = globalCamera->getUp();
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        globalCamera->move(forward, speed);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        globalCamera->move(-forward, speed);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        globalCamera->move(-right, speed);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        globalCamera->move(right, speed);
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        globalCamera->move(up, speed);
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        globalCamera->move(-up, speed);
+}
+
 void exitInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -115,8 +147,8 @@ void soundWaveInput(GLFWwindow *window, std::vector<SoundPoint> &soundpoints)
         {
             SoundPoint sp;
             sp.pos = globalCamera->getPosition();
-            sp.maxValue = 5.0f;
-            sp.value = 1.0f;
+            sp.maxValue = 2.0f;
+            sp.value = 0.4f;
             sp.isGrowing = true;
             soundpoints.push_back(sp);
             wasPressed = true;

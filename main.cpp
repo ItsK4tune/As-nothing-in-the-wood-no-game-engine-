@@ -15,11 +15,11 @@
 
 int main()
 {
-    GLFWwindow *window = createWindow(1920, 1080);
+    GLFWwindow *window = createWindow(-1, -1);
     configWindow(window);
 
     Camera camera(
-        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec3(0.0f, 0.25f, -1.0f),
         glm::vec3(0.0f, 0.0f, 1.0f),
         glm::vec3(0.0f, 1.0f, 0.0f),
         90.0f,
@@ -32,7 +32,7 @@ int main()
     Object box;
 
     std::vector<Vertex> vertices;
-    loadVertexFile("box.vertex", vertices);
+    loadVertexFile("house.vertex", vertices);
     Mesh boxMesh(vertices);
     box.setMesh(boxMesh);
 
@@ -62,52 +62,39 @@ int main()
             lastTime += 1.0;
         }
 
-        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+        glClearColor(0.0001f, 0.0001f, 0.0001f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
-        // glEnable(GL_CULL_FACE);
-        // glCullFace(GL_FRONT);
-        // glFrontFace(GL_CW);
 
         glm::mat4 view = camera.getViewMatrix();
         glm::mat4 projection = camera.getProjectionMatrix();
 
-        moveInput(window, deltaTime);
+        normalMoveInput(window, deltaTime);
         exitInput(window);
         soundWaveInput(window, SoundPoints);
 
         for (auto it = SoundPoints.begin(); it != SoundPoints.end();)
         {
-            if (it->isGrowing)
-            {
-                it->value += deltaTime * 5;
-                if (it->value >= it->maxValue)
-                {
-                    it->value = it->maxValue;
-                    it->isGrowing = false;
-                }
-                ++it;
-            }
+            if (!it->update(deltaTime))
+                it = SoundPoints.erase(it);
             else
-            {
-                it->value -= deltaTime;
-                if (it->value <= 0.0f)
-                    it = SoundPoints.erase(it);
-                else
-                    ++it;
-            }
+                ++it;
         }
 
         const int MAX_SOUND_POINTS = 10;
         std::vector<glm::vec3> positions;
         std::vector<float> radii;
+        std::vector<float> maxRadii;
+        std::vector<bool> isGrowings;
 
         for (int i = 0; i < std::min((int)SoundPoints.size(), MAX_SOUND_POINTS); ++i)
         {
             positions.push_back(SoundPoints[i].pos);
             radii.push_back(SoundPoints[i].value);
+            maxRadii.push_back(SoundPoints[i].maxValue);
+            isGrowings.push_back(SoundPoints[i].isGrowing);
         }
 
         box.setShader(boxFace);
@@ -119,6 +106,8 @@ int main()
         box.getShader().setInt("soundCount", positions.size());
         box.getShader().setVec3Array("soundPositions", positions);
         box.getShader().setFloatArray("soundRadii", radii);
+        box.getShader().setFloatArray("soundMaxRadii", maxRadii);
+        box.getShader().setBoolArray("soundIsGrowing", isGrowings);
         box.getShader().setBool("useColor", 0);
 
         box.draw();
@@ -132,6 +121,7 @@ int main()
         box.getShader().setInt("soundCount", positions.size());
         box.getShader().setVec3Array("soundPositions", positions);
         box.getShader().setFloatArray("soundRadii", radii);
+        box.getShader().setFloatArray("soundMaxRadii", maxRadii);
         box.getShader().setBool("useColor", 0);
 
         box.draw();
