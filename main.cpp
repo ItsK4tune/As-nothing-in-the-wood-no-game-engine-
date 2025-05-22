@@ -11,13 +11,15 @@
 #include "util/loadShader.h"
 #include "util/loadVertex.h"
 
+#include "util/struct/soundPoint.h"
+
 int main()
 {
-    GLFWwindow *window = createWindow(-1, -1);
+    GLFWwindow *window = createWindow(1920, 1080);
     configWindow(window);
 
     Camera camera(
-        glm::vec3(0.0f, 0.0f, -6.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
         glm::vec3(0.0f, 0.0f, 1.0f),
         glm::vec3(0.0f, 1.0f, 0.0f),
         90.0f,
@@ -26,40 +28,28 @@ int main()
         100.0f);
     globalCamera = &camera;
 
-    // Viền
-    Line outline;
-
-    std::vector<Vertex> vertices;
-    loadVertexFile("line.vertex", vertices);
-
-    Mesh outlineMesh(vertices);
-    outline.setMesh(outlineMesh);
-
-    Shader outlineShader("outline/basic.vert", "outline/basic.frag");
-    outline.setShader(outlineShader);
-
     // Main object
     Object box;
 
+    std::vector<Vertex> vertices;
     loadVertexFile("box.vertex", vertices);
-
     Mesh boxMesh(vertices);
     box.setMesh(boxMesh);
 
-    Shader boxShader("box/basic.vert", "box/basic.frag");
-    box.setShader(boxShader);
+    Shader boxFace("box/basic.vert", "box/basic.frag");
+    Shader boxOutline("outline/basic.vert", "outline/basic.frag", "outline/basic.geom");
 
     double lastTime = glfwGetTime();
     int frames = 0;
 
     float lastFrame = glfwGetTime();
 
-    float soundRadius = 0.1f;
+    std::vector<SoundPoint> SoundPoints;
 
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
-        float delta = currentFrame - lastFrame;
+        float deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
         frames++;
@@ -75,38 +65,76 @@ int main()
         glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        // glEnable(GL_CULL_FACE);
+        // glCullFace(GL_FRONT);
+        // glFrontFace(GL_CW);
+
         glm::mat4 view = camera.getViewMatrix();
         glm::mat4 projection = camera.getProjectionMatrix();
 
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
+        moveInput(window, deltaTime);
+        exitInput(window);
+        soundWaveInput(window, SoundPoints);
 
-        bool triggerSoundRing = soundWaveInput(window, soundRadius, delta);
+        for (auto it = SoundPoints.begin(); it != SoundPoints.end();)
+        {
+            if (it->isGrowing)
+            {
+                it->value += deltaTime * 5;
+                if (it->value >= it->maxValue)
+                {
+                    it->value = it->maxValue;
+                    it->isGrowing = false;
+                }
+                ++it;
+            }
+            else
+            {
+                it->value -= deltaTime;
+                if (it->value <= 0.0f)
+                    it = SoundPoints.erase(it);
+                else
+                    ++it;
+            }
+        }
 
+        const int MAX_SOUND_POINTS = 10;
+        std::vector<glm::vec3> positions;
+        std::vector<float> radii;
+
+        for (int i = 0; i < std::min((int)SoundPoints.size(), MAX_SOUND_POINTS); ++i)
+        {
+            positions.push_back(SoundPoints[i].pos);
+            radii.push_back(SoundPoints[i].value);
+        }
+
+        box.setShader(boxFace);
         box.use();
 
         box.getShader().setMat4("model", model);
         box.getShader().setMat4("view", view);
         box.getShader().setMat4("projection", projection);
-        box.getShader().setVec3("cameraPos", camera.getPosition());
-        box.getShader().setFloat("soundRadius", soundRadius);
-        if (triggerSoundRing)
-            box.getShader().setBool("useColor", 0);
-        else
-            box.getShader().setBool("useColor", 1);
+        box.getShader().setInt("soundCount", positions.size());
+        box.getShader().setVec3Array("soundPositions", positions);
+        box.getShader().setFloatArray("soundRadii", radii);
+        box.getShader().setBool("useColor", 0);
 
         box.draw();
 
-        outline.use();
+        box.setShader(boxOutline);
+        box.use();
 
-        outline.getShader().setMat4("model", model);
-        outline.getShader().setMat4("view", view);
-        outline.getShader().setMat4("projection", projection);
-        outline.getShader().setVec3("cameraPos", camera.getPosition());
-        outline.getShader().setFloat("soundRadius", soundRadius);
-        outline.getShader().setBool("useColor", 0);
+        box.getShader().setMat4("model", model);
+        box.getShader().setMat4("view", view);
+        box.getShader().setMat4("projection", projection);
+        box.getShader().setInt("soundCount", positions.size());
+        box.getShader().setVec3Array("soundPositions", positions);
+        box.getShader().setFloatArray("soundRadii", radii);
+        box.getShader().setBool("useColor", 0);
 
-        outline.drawLine(10.0f);
+        box.draw();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

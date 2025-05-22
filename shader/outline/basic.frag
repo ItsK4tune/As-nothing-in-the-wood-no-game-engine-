@@ -1,27 +1,28 @@
 #version 460 core
 
-in vec3 vColor;
-in vec3 vWorldPos;
+in vec3 gColor;
+in vec3 gWorldPos;
+
+#define MAX_SOUND_POINTS 10
 
 uniform bool useColor;
-uniform vec3 cameraPos;
-uniform float soundRadius;
+uniform int soundCount;
+uniform vec3 soundPositions[MAX_SOUND_POINTS];
+uniform float soundRadii[MAX_SOUND_POINTS];
 
 out vec4 FragColor;
 
 void main()
 {
-    float distance = length(cameraPos - vWorldPos);
+    vec3 color = gColor;
 
-    vec3 color;
-    if (useColor) {
-        color = vColor;
-    } else {
-        float delta = abs(distance - soundRadius);
-        if (distance < soundRadius) {
-            color = vec3(1.0);
-        } else {
-            color = vColor;
+    if (!useColor) {
+        for (int i = 0; i < soundCount; ++i) {
+            float dist = length(soundPositions[i] - gWorldPos);
+
+            if (dist < soundRadii[i]) {
+                color = vec3(1.0);
+            }
         }
     }
 

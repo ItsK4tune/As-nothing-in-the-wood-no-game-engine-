@@ -17,5 +17,7 @@ void main()
 
     vColor = aColor;
 
-    gl_Position = projection * view * worldPos;
+    vec4 pos = projection * view * worldPos;
+    pos.z -= 1e-3 * pos.w;
+    gl_Position = pos;
 }

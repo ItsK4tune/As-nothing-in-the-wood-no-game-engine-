@@ -38,7 +38,7 @@ unsigned int compileShader(unsigned int type, const char *source)
     return shader;
 }
 
-unsigned int createShaderProgram(const std::string inVert, const std::string inFrag)
+unsigned int createShaderProgram(const std::string inVert, const std::string inFrag, const std::string inGeo = "")
 {
     std::string vertexSource = loadShaderSource(inVert);
     std::string fragmentSource = loadShaderSource(inFrag);
@@ -49,9 +49,20 @@ unsigned int createShaderProgram(const std::string inVert, const std::string inF
     unsigned int vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
     unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
 
+    unsigned int geometryShader = 0;
+    if (!inGeo.empty())
+    {
+        std::string geometrySource = loadShaderSource(inGeo);
+        const char *geometryShaderSource = geometrySource.c_str();
+        geometryShader = compileShader(GL_GEOMETRY_SHADER, geometryShaderSource);
+    }
+
     unsigned int shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
+    if (geometryShader != 0)
+        glAttachShader(shaderProgram, geometryShader);
+
     glLinkProgram(shaderProgram);
 
     int success;
@@ -66,6 +77,8 @@ unsigned int createShaderProgram(const std::string inVert, const std::string inF
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+    if (geometryShader != 0)
+        glDeleteShader(geometryShader);
 
     return shaderProgram;
 }
