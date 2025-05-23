@@ -2,11 +2,11 @@
 
 #include <GLFW/glfw3.h>
 #include <vector>
-#include "util/camera.h"
+#include "util/object.h"
 
 #include "util/struct/soundPoint.h"
 
-extern Camera *globalCamera;
+extern Player *mainCharacter;
 extern glm::mat4 model;
 
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos);

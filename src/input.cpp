@@ -1,7 +1,7 @@
 #include "util/input.h"
 #include "util/affine.h"
 
-Camera *globalCamera = nullptr;
+Player *mainCharacter = nullptr;
 
 float pitch = 0.0f, yaw = -90.0f;
 glm::vec3 objectRotation = glm::vec3(0.0f);
@@ -15,7 +15,7 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos)
 
     if (firstMouse)
     {
-        glm::vec3 dir = glm::normalize(globalCamera->getTarget() - globalCamera->getPosition());
+        glm::vec3 dir = glm::normalize(mainCharacter->getCamera().getTarget() - mainCharacter->getCamera().getPosition());
         pitch = glm::degrees(asin(dir.y));
         yaw = glm::degrees(atan2(dir.z, dir.x));
         lastX = xpos;
@@ -43,18 +43,12 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos)
     direction.y = sin(glm::radians(pitch));
     direction.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
 
-    if (globalCamera)
-    {
-        glm::vec3 position = globalCamera->getPosition();
-        globalCamera->setTarget(position + glm::normalize(direction));
-    }
+    glm::vec3 position = mainCharacter->getCamera().getPosition();
+    mainCharacter->getCamera().setTarget(position + glm::normalize(direction));
 }
 
 void ghostMoveInput(GLFWwindow *window, float deltaTime)
 {
-    if (!globalCamera)
-        return;
-
     float baseSpeed = 1.0f;
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         baseSpeed = 2.0f;
@@ -63,22 +57,22 @@ void ghostMoveInput(GLFWwindow *window, float deltaTime)
     float angleStep = 1.0f * deltaTime;
     float scaleStep = 1.0f * deltaTime;
 
-    glm::vec3 forward = glm::normalize(globalCamera->getTarget() - globalCamera->getPosition());
-    glm::vec3 right = glm::normalize(glm::cross(forward, globalCamera->getUp()));
-    glm::vec3 up = globalCamera->getUp();
+    glm::vec3 forward = glm::normalize(mainCharacter->getCamera().getTarget() - mainCharacter->getCamera().getPosition());
+    glm::vec3 right = glm::normalize(glm::cross(forward, mainCharacter->getCamera().getUp()));
+    glm::vec3 up = mainCharacter->getCamera().getUp();
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        globalCamera->move(forward, speed);
+        mainCharacter->getCamera().move(forward, speed);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        globalCamera->move(-forward, speed);
+        mainCharacter->getCamera().move(-forward, speed);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        globalCamera->move(-right, speed);
+        mainCharacter->getCamera().move(-right, speed);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        globalCamera->move(right, speed);
+        mainCharacter->getCamera().move(right, speed);
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        globalCamera->move(up, speed);
+        mainCharacter->getCamera().move(up, speed);
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        globalCamera->move(-up, speed);
+        mainCharacter->getCamera().move(-up, speed);
 
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
         objectRotation.x -= angleStep;
@@ -101,9 +95,6 @@ void ghostMoveInput(GLFWwindow *window, float deltaTime)
 
 void normalMoveInput(GLFWwindow *window, float deltaTime)
 {
-    if (!globalCamera)
-        return;
-
     float baseSpeed = 1.0f;
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         baseSpeed = 2.0f;
@@ -113,22 +104,22 @@ void normalMoveInput(GLFWwindow *window, float deltaTime)
     if (!speed)
         return;
 
-    glm::vec3 forward = glm::normalize(glm::vec3(globalCamera->getTarget().x, globalCamera->getPosition().y, globalCamera->getTarget().z) - globalCamera->getPosition());
-    glm::vec3 right = glm::normalize(glm::cross(forward, globalCamera->getUp()));
-    glm::vec3 up = globalCamera->getUp();
+    glm::vec3 forward = glm::normalize(glm::vec3(mainCharacter->getCamera().getTarget().x, mainCharacter->getCamera().getPosition().y, mainCharacter->getCamera().getTarget().z) - mainCharacter->getCamera().getPosition());
+    glm::vec3 right = glm::normalize(glm::cross(forward, mainCharacter->getCamera().getUp()));
+    glm::vec3 up = mainCharacter->getCamera().getUp();
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        globalCamera->move(forward, speed);
+        mainCharacter->getCamera().move(forward, speed);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        globalCamera->move(-forward, speed);
+        mainCharacter->getCamera().move(-forward, speed);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        globalCamera->move(-right, speed);
+        mainCharacter->getCamera().move(-right, speed);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        globalCamera->move(right, speed);
+        mainCharacter->getCamera().move(right, speed);
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        globalCamera->move(up, speed);
+        mainCharacter->getCamera().move(up, speed);
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        globalCamera->move(-up, speed);
+        mainCharacter->getCamera().move(-up, speed);
 }
 
 void exitInput(GLFWwindow *window)
@@ -146,7 +137,7 @@ void soundWaveInput(GLFWwindow *window, std::vector<SoundPoint> &soundpoints)
         if (!wasPressed)
         {
             SoundPoint sp;
-            sp.pos = globalCamera->getPosition();
+            sp.pos = mainCharacter->getCamera().getPosition();
             sp.maxValue = 2.0f;
             sp.value = 0.4f;
             sp.isGrowing = true;

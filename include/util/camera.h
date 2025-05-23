@@ -12,8 +12,13 @@ public:
         Orthographic
     };
 
-    Camera(glm::vec3 position, glm::vec3 target, glm::vec3 up,
-           float fovDegrees, float aspectRatio, float nearPlane, float farPlane);
+    Camera(const glm::vec3 &position = glm::vec3(0.0f),
+           const glm::vec3 &target = glm::vec3(0.0f, 0.0f, 1.0f),
+           const glm::vec3 &up = glm::vec3(0.0f, 1.0f, 0.0f),
+           const float &fovDegrees = 90.0f,
+           const float &aspectRatio = 16.0f / 9.0f,
+           const float &nearPlane = 0.1f,
+           const float &farPlane = 1000.0f);
 
     void setPosition(const glm::vec3 &position);
     void setTarget(const glm::vec3 &target);

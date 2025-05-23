@@ -26,7 +26,8 @@ int main()
         16.0f / 9.0f,
         0.1f,
         100.0f);
-    globalCamera = &camera;
+    Player player(camera);
+    mainCharacter = &player;
 
     // Main object
     Object box;
@@ -68,8 +69,8 @@ int main()
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
 
-        glm::mat4 view = camera.getViewMatrix();
-        glm::mat4 projection = camera.getProjectionMatrix();
+        glm::mat4 view = player.getCamera().getViewMatrix();
+        glm::mat4 projection = player.getCamera().getProjectionMatrix();
 
         normalMoveInput(window, deltaTime);
         exitInput(window);

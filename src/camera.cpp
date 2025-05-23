@@ -1,7 +1,12 @@
 #include "util/camera.h"
 
-Camera::Camera(glm::vec3 position, glm::vec3 target, glm::vec3 up,
-               float fovDegrees, float aspectRatio, float nearPlane, float farPlane)
+Camera::Camera(const glm::vec3 &position,
+               const glm::vec3 &target,
+               const glm::vec3 &up,
+               const float &fovDegrees,
+               const float &aspectRatio,
+               const float &nearPlane,
+               const float &farPlane)
     : m_position(position),
       m_target(target),
       m_up(up),
