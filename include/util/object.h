@@ -16,7 +16,7 @@ public:
         const glm::vec3 &position = glm::vec3(0.0f),
         const Shader &shader = Shader());
 
-    void setPosition(const glm::vec3 &position);
+    virtual void setPosition(const glm::vec3 &position);
     void setMesh(const Mesh &mesh);
     void setMaterial(const Material &material);
     void setAmbient(const glm::vec3 &ambient);
@@ -82,7 +82,7 @@ public:
     void setScale(const glm::mat4 &scale);
     void updateAABB();
     bool checkCollisionAABB(const Entity &other) const;
-    bool checkCollisionWithTriangles(const std::vector<Vertex> &vertices) const;
+    bool checkCollisionWithTriangles(const std::vector<Vertex> &vertices, const glm::mat4 &modelMatrix, glm::vec3 &outPushDir) const;
 
     glm::vec3 getAABBMin() const;
     glm::vec3 getAABBMax() const;
@@ -100,9 +100,17 @@ private:
 class Player : public Entity
 {
 public:
-    Player(const Camera &camera = Camera());
+    Player(const glm::vec3 &startPosition);
 
-    void setCamera(const Camera &camera);
+    void setPosition(const glm::vec3 &position) override;
+    void moveForward(float amount);
+    void moveRight(float amount);
+    void moveUp(float amount);
+    void jump();
+    void updateCamera(const glm::vec3 &playerPosition, const glm::vec3 &playerTarget);
+
+    void pushBack(glm::vec3 direction, float strength);
+
     Camera &getCamera();
 
 private:

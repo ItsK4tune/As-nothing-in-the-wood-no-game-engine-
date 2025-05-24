@@ -3,10 +3,10 @@
 Camera::Camera(const glm::vec3 &position,
                const glm::vec3 &target,
                const glm::vec3 &up,
-               const float &fovDegrees,
-               const float &aspectRatio,
-               const float &nearPlane,
-               const float &farPlane)
+               float fovDegrees,
+               float aspectRatio,
+               float nearPlane,
+               float farPlane)
     : m_position(position),
       m_target(target),
       m_up(up),
@@ -18,6 +18,12 @@ Camera::Camera(const glm::vec3 &position,
 
 void Camera::setPosition(const glm::vec3 &position) { m_position = position; }
 void Camera::setTarget(const glm::vec3 &target) { m_target = target; }
+void Camera::setUp(const glm::vec3 &up) { m_up = up; }
+void Camera::setPitchYaw(float pitch, float yaw)
+{
+    this->pitch = pitch;
+    this->yaw = yaw;
+}
 void Camera::setAspectRatio(float aspect) { m_aspectRatio = aspect; }
 void Camera::setProjectionType(ProjectionType type) { m_projectionType = type; }
 void Camera::setOrthoBounds(float left, float right, float bottom, float top)
@@ -27,28 +33,15 @@ void Camera::setOrthoBounds(float left, float right, float bottom, float top)
     m_bottom = bottom;
     m_top = top;
 }
-// void Camera::updateFromWindowSize(int width, int height)
-// {
-//     if (height == 0)
-//         height = 1;
-//     m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
 
-//     if (m_projectionType == ProjectionType::Orthographic)
-//     {
-//         float viewHeight = m_top - m_bottom;
-//         float viewWidth = viewHeight * m_aspectRatio;
-
-//         float centerX = (m_left + m_right) / 2.0f;
-//         m_left = centerX - viewWidth / 2.0f;
-//         m_right = centerX + viewWidth / 2.0f;
-//     }
-// }
-void Camera::move(const glm::vec3 &direction, float amount)
+void Camera::updateFromPlayer(const glm::vec3 &playerPosition, const glm::vec3 &playerTarget)
 {
-    m_position += direction * amount;
-    m_target += direction * amount;
+    m_position = playerPosition;
+    m_target = playerTarget;
 }
 
+float Camera::getPitch() const { return pitch; }
+float Camera::getYaw() const { return yaw; }
 glm::mat4 Camera::getViewMatrix() const { return glm::lookAt(m_position, m_target, m_up); }
 glm::mat4 Camera::getProjectionMatrix() const
 {

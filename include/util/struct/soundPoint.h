@@ -10,6 +10,7 @@ struct SoundPoint
     float maxValue = 5.0f;
     float value = 0.1f;
     bool isGrowing = true;
+    float elapsedTime = 0.0f;
 
     bool update(float deltaTime);
 };

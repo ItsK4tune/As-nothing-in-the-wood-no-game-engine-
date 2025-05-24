@@ -1,12 +1,15 @@
 #include "util/struct/soundPoint.h"
-#include <iostream>
+#include <cmath>
 
 bool SoundPoint::update(float deltaTime)
 {
     if (isGrowing)
     {
-        value += deltaTime * 2;
-        if (value >= maxValue)
+        elapsedTime += deltaTime;
+        float k = 3.0f;
+        value = maxValue * (1.0f - std::exp(-k * elapsedTime));
+
+        if (value >= maxValue - 0.01f)
         {
             value = maxValue;
             isGrowing = false;
@@ -15,7 +18,7 @@ bool SoundPoint::update(float deltaTime)
     else
     {
         float ratio = value / maxValue;
-        value -= deltaTime * (1.01f - pow(ratio, 2.0f)) * 2;
+        value -= deltaTime * (1.01f - std::pow(ratio, 2.0f)) * 2;
         if (value <= 0.0f)
             return false;
     }

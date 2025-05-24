@@ -20,7 +20,7 @@ GLFWwindow *createWindow(int width, int height)
     }
     else
     {
-        window = glfwCreateWindow(width, height, "OpenGL renderWindow", NULL, NULL);
+        window = glfwCreateWindow(width, height, "As nothing in the wood", NULL, NULL);
     }
 
     if (!window)

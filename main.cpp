@@ -18,18 +18,10 @@ int main()
     GLFWwindow *window = createWindow(-1, -1);
     configWindow(window);
 
-    Camera camera(
-        glm::vec3(0.0f, 0.25f, -1.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f),
-        90.0f,
-        16.0f / 9.0f,
-        0.1f,
-        100.0f);
-    Player player(camera);
+    Player player(glm::vec3(0.0f, 0.0f, 0.0f));
+    player.setPosition(glm::vec3(-0.5f, 0.5f, -0.5f));
     mainCharacter = &player;
 
-    // Main object
     Object box;
 
     std::vector<Vertex> vertices;
@@ -63,7 +55,7 @@ int main()
             lastTime += 1.0;
         }
 
-        glClearColor(0.0001f, 0.0001f, 0.0001f, 1.0f);
+        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glEnable(GL_DEPTH_TEST);
@@ -72,7 +64,7 @@ int main()
         glm::mat4 view = player.getCamera().getViewMatrix();
         glm::mat4 projection = player.getCamera().getProjectionMatrix();
 
-        normalMoveInput(window, deltaTime);
+        normalMoveInput(window, SoundPoints, deltaTime);
         exitInput(window);
         soundWaveInput(window, SoundPoints);
 
@@ -84,7 +76,7 @@ int main()
                 ++it;
         }
 
-        const int MAX_SOUND_POINTS = 10;
+        const int MAX_SOUND_POINTS = 100;
         std::vector<glm::vec3> positions;
         std::vector<float> radii;
         std::vector<float> maxRadii;
@@ -126,6 +118,13 @@ int main()
         box.getShader().setBool("useColor", 0);
 
         box.draw();
+
+        glm::vec3 pushDir;
+        if (player.checkCollisionWithTriangles(vertices, model, pushDir))
+        {
+            float pushStrength = 0.001f;
+            player.pushBack(pushDir, pushStrength);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -3,7 +3,7 @@
 in vec3 gColor;
 in vec3 gWorldPos;
 
-#define MAX_SOUND_POINTS 10
+#define MAX_SOUND_POINTS 100
 
 uniform bool useColor;
 uniform int soundCount;
