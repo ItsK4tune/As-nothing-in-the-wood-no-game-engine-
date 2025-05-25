@@ -9,7 +9,7 @@
 extern Player *mainCharacter;
 extern glm::mat4 model;
 
-void cursor_position_callback(GLFWwindow *window, double xpos, double ypos);
+void mouseInput(GLFWwindow *window, double xpos, double ypos);
 void ghostMoveInput(GLFWwindow *window, float deltaTime);
 void normalMoveInput(GLFWwindow *window, std::vector<SoundPoint> &soundpoints, float deltaTime);
 void exitInput(GLFWwindow *window);

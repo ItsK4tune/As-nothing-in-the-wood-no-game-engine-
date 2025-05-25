@@ -15,12 +15,19 @@
 
 int main()
 {
-    GLFWwindow *window = createWindow(-1, -1);
+    GLFWwindow *window = createWindow(1920, 16.0f / 9.0f);
     configWindow(window);
 
     Player player(glm::vec3(0.0f, 0.0f, 0.0f));
-    player.setPosition(glm::vec3(-0.5f, 0.5f, -0.5f));
+    player.setPosition(glm::vec3(0.5f, 0.5f, 0.5f));
     mainCharacter = &player;
+
+    // std::vector<Vertex> playerVertices;
+    // loadVertexFile("player.vertex", playerVertices);
+    // Mesh playerMesh(playerVertices);
+    // player.setMesh(playerMesh);
+    // Shader playerOutline("outline/basic.vert", "outline/basic.frag", "outline/basic.geom");
+    // player.setShader(playerOutline);
 
     Object box;
 
@@ -58,15 +65,20 @@ int main()
         glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+
+        mouseInput(window, xpos, ypos);
+        normalMoveInput(window, SoundPoints, deltaTime);
+        exitInput(window);
+        soundWaveInput(window, SoundPoints);
+        player.update(deltaTime, vertices, model);
+
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
 
         glm::mat4 view = player.getCamera().getViewMatrix();
         glm::mat4 projection = player.getCamera().getProjectionMatrix();
-
-        normalMoveInput(window, SoundPoints, deltaTime);
-        exitInput(window);
-        soundWaveInput(window, SoundPoints);
 
         for (auto it = SoundPoints.begin(); it != SoundPoints.end();)
         {
@@ -119,12 +131,20 @@ int main()
 
         box.draw();
 
-        glm::vec3 pushDir;
-        if (player.checkCollisionWithTriangles(vertices, model, pushDir))
-        {
-            float pushStrength = 0.001f;
-            player.pushBack(pushDir, pushStrength);
-        }
+        // player.use();
+
+        // player.getShader().setMat4("model", glm::translate(glm::mat4(1.0f), player.getPosition()) * player.getRotation() * player.getScale());
+        // player.getShader().setMat4("view", view);
+        // player.getShader().setMat4("projection", projection);
+        // player.getShader().setInt("soundCount", positions.size());
+        // player.getShader().setVec3Array("soundPositions", positions);
+        // player.getShader().setFloatArray("soundRadii", radii);
+        // player.getShader().setFloatArray("soundMaxRadii", maxRadii);
+        // player.getShader().setBool("useColor", 0);
+
+        // player.draw();
+
+        // std::cout << "(" << player.getPosition().x << ", " << player.getPosition().y << ", " << player.getPosition().z << ") (" << player.getCamera().getPosition().x << ", " << player.getCamera().getPosition().y << ", " << player.getCamera().getPosition().z << ") (" << player.getCamera().getTarget().x << ", " << player.getCamera().getTarget().y << ", " << player.getCamera().getTarget().z << std::endl;
 
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -15,7 +15,7 @@ glm::vec3 objectRotation = glm::vec3(0.0f);
 glm::vec3 objectScale = glm::vec3(1.0f);
 glm::mat4 model = glm::mat4(1.0f);
 
-void cursor_position_callback(GLFWwindow *window, double xpos, double ypos)
+void mouseInput(GLFWwindow *window, double xpos, double ypos)
 {
     static bool firstMouse = true;
     static double lastX = 0.0, lastY = 0.0;
@@ -24,17 +24,24 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos)
     float pitch = camera.getPitch();
     float yaw = camera.getYaw();
 
+    // if (firstMouse)
+    // {
+    //     glm::vec3 dir = mainCharacter->getCamera().getTarget();
+    //     pitch = glm::degrees(asin(dir.y));
+    //     yaw = glm::degrees(atan2(dir.z, dir.x));
+    //     lastX = xpos;
+    //     lastY = ypos;
+    //     firstMouse = false;
+
+    //     camera.setPitchYaw(pitch, yaw);
+    //     return;
+    // }
+
     if (firstMouse)
     {
-        glm::vec3 dir = mainCharacter->getCamera().getTarget();
-        pitch = glm::degrees(asin(dir.y));
-        yaw = glm::degrees(atan2(dir.z, dir.x));
         lastX = xpos;
         lastY = ypos;
         firstMouse = false;
-
-        camera.setPitchYaw(pitch, yaw);
-        return;
     }
 
     double dx = xpos - lastX;
@@ -55,49 +62,49 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos)
     direction = glm::normalize(direction);
 
     glm::vec3 pos = mainCharacter->getPosition();
-    camera.updateFromPlayer(pos, pos + direction);
+    camera.updateFromPlayer(pos, direction);
     camera.setPitchYaw(pitch, yaw);
 }
 
-void ghostMoveInput(GLFWwindow *window, float deltaTime)
-{
-    float baseSpeed = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) ? 1.0f : 0.5f;
-    float speed = baseSpeed * deltaTime;
-    float angleStep = 1.0f * deltaTime;
-    float scaleStep = 1.0f * deltaTime;
+// void ghostMoveInput(GLFWwindow *window, float deltaTime)
+// {
+//     float baseSpeed = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) ? 1.0f : 0.5f;
+//     float speed = baseSpeed * deltaTime;
+//     float angleStep = 1.0f * deltaTime;
+//     float scaleStep = 1.0f * deltaTime;
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        mainCharacter->moveForward(speed);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        mainCharacter->moveForward(-speed);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        mainCharacter->moveRight(-speed);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        mainCharacter->moveRight(speed);
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        mainCharacter->moveUp(speed);
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        mainCharacter->moveUp(-speed);
+//     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+//         mainCharacter->moveForward(speed);
+//     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+//         mainCharacter->moveForward(-speed);
+//     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+//         mainCharacter->moveRight(-speed);
+//     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+//         mainCharacter->moveRight(speed);
+//     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+//         mainCharacter->moveUp(speed);
+//     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+//         mainCharacter->moveUp(-speed);
 
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        objectRotation.x -= angleStep;
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        objectRotation.x += angleStep;
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        objectRotation.y -= angleStep;
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        objectRotation.y += angleStep;
+//     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+//         objectRotation.x -= angleStep;
+//     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+//         objectRotation.x += angleStep;
+//     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+//         objectRotation.y -= angleStep;
+//     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+//         objectRotation.y += angleStep;
 
-    if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
-        objectScale += glm::vec3(scaleStep);
-    if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
-    {
-        objectScale -= glm::vec3(scaleStep);
-        objectScale = glm::max(objectScale, glm::vec3(0.1f));
-    }
+//     if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
+//         objectScale += glm::vec3(scaleStep);
+//     if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
+//     {
+//         objectScale -= glm::vec3(scaleStep);
+//         objectScale = glm::max(objectScale, glm::vec3(0.1f));
+//     }
 
-    model = createAffineTransformMatrix(objectScale, objectRotation, glm::vec3(0.0f));
-}
+//     model = createAffineTransformMatrix(objectScale, objectRotation, glm::vec3(0.0f));
+// }
 
 void normalMoveInput(GLFWwindow *window, std::vector<SoundPoint> &soundpoints, float deltaTime)
 {
@@ -105,32 +112,43 @@ void normalMoveInput(GLFWwindow *window, std::vector<SoundPoint> &soundpoints, f
 
     bool isRunning = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
     bool isMoving = false;
+    float speed = (isRunning ? RUNNING_SPEED : WALKING_SPEED);
+
+    glm::vec3 forward = mainCharacter->getCamera().getDirection();
+    glm::vec3 up = mainCharacter->getCamera().getUp();
+    glm::vec3 right = glm::normalize(glm::cross(forward, up));
+    glm::vec3 moveInput(0.0f);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    {
-        mainCharacter->moveForward((isRunning ? RUNNING_SPEED : WALKING_SPEED) * deltaTime);
-        isMoving = true;
-    }
+        moveInput += glm::vec3(forward.x, 0.0f, forward.z);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    {
-        mainCharacter->moveForward(-(isRunning ? RUNNING_SPEED : WALKING_SPEED) * deltaTime);
-        isMoving = true;
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    {
-        mainCharacter->moveRight(-(isRunning ? RUNNING_SPEED : WALKING_SPEED) * deltaTime);
-        isMoving = true;
-    }
+        moveInput -= glm::vec3(forward.x, 0.0f, forward.z);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        moveInput += right;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        moveInput -= right;
+
+    if (glm::length(moveInput) > 0.0f)
     {
-        mainCharacter->moveRight((isRunning ? RUNNING_SPEED : WALKING_SPEED) * deltaTime);
+        moveInput = glm::normalize(moveInput) * speed;
+        mainCharacter->setVelocity(moveInput);
         isMoving = true;
+    }
+    else
+    {
+        mainCharacter->setVelocity(glm::vec3(0.0f));
     }
 
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        mainCharacter->moveUp((isRunning ? RUNNING_SPEED : WALKING_SPEED) * deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        mainCharacter->moveUp(-(isRunning ? RUNNING_SPEED : WALKING_SPEED) * deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && mainCharacter->isGrounded())
+    {
+        mainCharacter->jump(glm::vec3(0.0f, 0.8f, 0.0f));
+        SoundPoint sp;
+        sp.pos = mainCharacter->getPosition();
+        sp.maxValue = isRunning ? 1.0f : 0.75f;
+        sp.value = 0.f;
+        sp.isGrowing = true;
+        soundpoints.push_back(sp);
+    }
 
     if (isMoving)
     {

@@ -13,7 +13,7 @@ public:
     };
 
     Camera(const glm::vec3 &position = glm::vec3(0.0f),
-           const glm::vec3 &target = glm::vec3(0.0f, 0.0f, 1.0f),
+           const glm::vec3 &direction = glm::vec3(0.0f, 0.0f, 1.0f),
            const glm::vec3 &up = glm::vec3(0.0f, 1.0f, 0.0f),
            float fovDegrees = 90.0f,
            float aspectRatio = 16.0f / 9.0f,
@@ -21,7 +21,7 @@ public:
            float farPlane = 1000.0f);
 
     void setPosition(const glm::vec3 &position);
-    void setTarget(const glm::vec3 &target);
+    void setDirection(const glm::vec3 &direction);
     void setUp(const glm::vec3 &up);
     void setPitchYaw(float pitch, float yaw);
     void setAspectRatio(float aspect);
@@ -35,12 +35,12 @@ public:
     glm::mat4 getViewMatrix() const;
     glm::mat4 getProjectionMatrix() const;
     glm::vec3 getPosition() const;
-    glm::vec3 getTarget() const;
+    glm::vec3 getDirection() const;
     glm::vec3 getUp() const;
 
 private:
     glm::vec3 m_position;
-    glm::vec3 m_target;
+    glm::vec3 m_direction;
     glm::vec3 m_up;
     float pitch = 0.0f;
     float yaw = -90.0f;

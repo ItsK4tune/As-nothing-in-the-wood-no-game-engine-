@@ -2,7 +2,7 @@
 #include "util/input.h"
 #include <iostream>
 
-GLFWwindow *createWindow(int width, int height)
+GLFWwindow *createWindow(int width, float resolution)
 {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -11,7 +11,9 @@ GLFWwindow *createWindow(int width, int height)
 
     GLFWwindow *window;
 
-    if (width < 0 || height < 0)
+    int height = static_cast<int>(width / resolution);
+
+    if (width < 0)
     {
         GLFWmonitor *primaryMonitor = glfwGetPrimaryMonitor();
         const GLFWvidmode *mode = glfwGetVideoMode(primaryMonitor);
@@ -34,6 +36,9 @@ GLFWwindow *createWindow(int width, int height)
     glfwWindowHint(GLFW_DEPTH_BITS, 24);
     gladLoadGL();
 
+    // vsync
+    glfwSwapInterval(0);
+
     return window;
 }
 
@@ -46,5 +51,4 @@ void configWindow(GLFWwindow *window)
 {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetCursorPosCallback(window, cursor_position_callback);
 }

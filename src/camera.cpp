@@ -1,24 +1,24 @@
 #include "util/camera.h"
 
 Camera::Camera(const glm::vec3 &position,
-               const glm::vec3 &target,
+               const glm::vec3 &direction,
                const glm::vec3 &up,
                float fovDegrees,
                float aspectRatio,
                float nearPlane,
                float farPlane)
     : m_position(position),
-      m_target(target),
-      m_up(up),
+      m_direction(glm::normalize(direction)),
+      m_up(glm::normalize(up)),
       m_fovDegrees(fovDegrees),
       m_aspectRatio(aspectRatio),
       m_nearPlane(nearPlane),
       m_farPlane(farPlane),
       m_projectionType(ProjectionType::Perspective) {}
 
-void Camera::setPosition(const glm::vec3 &position) { m_position = position; }
-void Camera::setTarget(const glm::vec3 &target) { m_target = target; }
-void Camera::setUp(const glm::vec3 &up) { m_up = up; }
+void Camera::setPosition(const glm::vec3 &position) { m_position = glm::normalize(position); }
+void Camera::setDirection(const glm::vec3 &direction) { m_direction = glm::normalize(direction); }
+void Camera::setUp(const glm::vec3 &up) { m_up = glm::normalize(up); }
 void Camera::setPitchYaw(float pitch, float yaw)
 {
     this->pitch = pitch;
@@ -33,16 +33,18 @@ void Camera::setOrthoBounds(float left, float right, float bottom, float top)
     m_bottom = bottom;
     m_top = top;
 }
-
-void Camera::updateFromPlayer(const glm::vec3 &playerPosition, const glm::vec3 &playerTarget)
+void Camera::updateFromPlayer(const glm::vec3 &position, const glm::vec3 &direction)
 {
-    m_position = playerPosition;
-    m_target = playerTarget;
+    m_position = position;
+    m_direction = glm::normalize(direction);
 }
-
 float Camera::getPitch() const { return pitch; }
 float Camera::getYaw() const { return yaw; }
-glm::mat4 Camera::getViewMatrix() const { return glm::lookAt(m_position, m_target, m_up); }
+glm::mat4 Camera::getViewMatrix() const
+{
+    glm::vec3 target = m_position + m_direction;
+    return glm::lookAt(m_position, target, m_up);
+}
 glm::mat4 Camera::getProjectionMatrix() const
 {
     if (m_projectionType == ProjectionType::Perspective)
@@ -55,5 +57,5 @@ glm::mat4 Camera::getProjectionMatrix() const
     }
 }
 glm::vec3 Camera::getPosition() const { return m_position; }
-glm::vec3 Camera::getTarget() const { return m_target; }
+glm::vec3 Camera::getDirection() const { return m_direction; }
 glm::vec3 Camera::getUp() const { return m_up; }

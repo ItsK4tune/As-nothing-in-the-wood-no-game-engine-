@@ -2,6 +2,8 @@
 #include "util/struct/struct.h"
 #include <iostream>
 
+#define GRAVITY 3.0f
+
 Object::Object(
     const Mesh &mesh,
     const Material &material,
@@ -56,6 +58,13 @@ Entity::Entity(
       m_rotation(rotation),
       m_scale(scale) { updateAABB(); }
 
+void Entity::setPosition(const glm::vec3 &position)
+{
+  glm::vec3 oldPosition = getPosition();
+  Object::setPosition(position);
+  updateAABB();
+}
+
 void Entity::setRotation(const glm::mat4 &rotation)
 {
   m_rotation = rotation;
@@ -64,26 +73,6 @@ void Entity::setRotation(const glm::mat4 &rotation)
 void Entity::setScale(const glm::mat4 &scale)
 {
   m_scale = scale;
-}
-
-glm::vec3 Entity::getAABBMin() const
-{
-  return m_aabbMin;
-}
-
-glm::vec3 Entity::getAABBMax() const
-{
-  return m_aabbMax;
-}
-
-glm::mat4 Entity::getRotation() const
-{
-  return m_rotation;
-}
-
-glm::mat4 Entity::getScale() const
-{
-  return m_scale;
 }
 
 void Entity::updateAABB()
@@ -121,8 +110,9 @@ bool Entity::checkCollisionAABB(const Entity &other) const
            m_aabbMax.z < other.m_aabbMin.z || m_aabbMin.z > other.m_aabbMax.z);
 }
 
-bool pointInTriangle(const glm::vec3 &P, const glm::vec3 &A, const glm::vec3 &B, const glm::vec3 &C)
+bool Entity::pointInTriangle(const glm::vec3 &P, const glm::vec3 &A, const glm::vec3 &B, const glm::vec3 &C) const
 {
+  const float epsilon = 1e-5f;
   glm::vec3 v0 = C - A;
   glm::vec3 v1 = B - A;
   glm::vec3 v2 = P - A;
@@ -134,24 +124,25 @@ bool pointInTriangle(const glm::vec3 &P, const glm::vec3 &A, const glm::vec3 &B,
   float d12 = glm::dot(v1, v2);
 
   float denom = d00 * d11 - d01 * d01;
-  if (denom == 0.0f)
+  if (fabs(denom) < epsilon)
     return false;
+
   float invDenom = 1.0f / denom;
 
   float u = (d11 * d02 - d01 * d12) * invDenom;
   float v = (d00 * d12 - d01 * d02) * invDenom;
 
-  return (u >= 0) && (v >= 0) && (u + v <= 1);
+  return (u >= -epsilon) && (v >= -epsilon) && (u + v <= 1.0f + epsilon);
 }
 
-bool Entity::checkCollisionWithTriangles(const std::vector<Vertex> &vertices, const glm::mat4 &modelMatrix, glm::vec3 &outPushDir) const
+bool Entity::checkCollisionWithTriangles(const std::vector<Vertex> &vertices, const glm::mat4 &modelMatrix, glm::vec3 &outNormal)
 {
-  glm::vec3 center = (m_aabbMin + m_aabbMax) * 0.5f;
-
   if (vertices.size() % 3 != 0)
   {
     exit(-1);
   }
+
+  glm::vec3 center = (m_aabbMin + m_aabbMax) * 0.5f;
 
   for (size_t i = 0; i < vertices.size(); i += 3)
   {
@@ -168,13 +159,36 @@ bool Entity::checkCollisionWithTriangles(const std::vector<Vertex> &vertices, co
           m_aabbMax.y + delta < triMin.y || m_aabbMin.y - delta > triMax.y ||
           m_aabbMax.z + delta < triMin.z || m_aabbMin.z - delta > triMax.z))
     {
-      if (pointInTriangle(center, v0, v1, v2))
+      auto &entityVertices = getMesh().vertices;
+
+      if (!entityVertices.size())
       {
-        glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
-        glm::vec3 toCenter = glm::normalize(center - v0);
-        float cosTheta = glm::dot(normal, toCenter);
-        outPushDir = (cosTheta > 0.0f) ? normal : -normal;
-        return true;
+        if (pointInTriangle(center, v0, v1, v2))
+        {
+          glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
+          glm::vec3 toCenter = glm::normalize(center - v0);
+          float cosTheta = glm::dot(normal, toCenter);
+          outNormal = (cosTheta > 0.0f) ? normal : -normal;
+          return true;
+        }
+      }
+      else
+      {
+        for (auto &v : entityVertices)
+        {
+          if (pointInTriangle(v.pos, v0, v1, v2))
+          {
+            // std::cout << "Collision detected with triangle: "
+            //           << "v0: " << glm::to_string(v0) << ", "
+            //           << "v1: " << glm::to_string(v1) << ", "
+            //           << "v2: " << glm::to_string(v2) << "vertex: " << glm::to_string(v.pos) << std::endl;
+            glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
+            glm::vec3 toCenter = glm::normalize(center - v0);
+            float cosTheta = glm::dot(normal, toCenter);
+            outNormal = (cosTheta > 0.0f) ? normal : -normal;
+            return true;
+          }
+        }
       }
     }
   }
@@ -182,57 +196,59 @@ bool Entity::checkCollisionWithTriangles(const std::vector<Vertex> &vertices, co
   return false;
 }
 
+glm::vec3 Entity::getAABBMin() const
+{
+  return m_aabbMin;
+}
+
+glm::vec3 Entity::getAABBMax() const
+{
+  return m_aabbMax;
+}
+
+glm::mat4 Entity::getRotation() const
+{
+  return m_rotation;
+}
+
+glm::mat4 Entity::getScale() const
+{
+  return m_scale;
+}
+
 Player::Player(const glm::vec3 &startPosition)
     : m_camera(startPosition)
 {
   glm::vec3 pos = getPosition();
-  glm::vec3 target = m_camera.getTarget();
-  updateCamera(pos, target);
+  glm::vec3 direction = m_camera.getDirection();
+  updateCamera(pos, direction);
 }
 
-void Player::setPosition(const glm::vec3 &position)
+void Player::applyGravity(float deltaTime)
 {
-  Object::setPosition(position);
-  glm::vec3 newTarget = m_camera.getTarget() + (position - getPosition());
-  m_camera.setPosition(position);
-  m_camera.setTarget(newTarget);
-
-  updateAABB();
+  m_velocity.y -= GRAVITY * deltaTime;
 }
 
-void Player::moveForward(float amount)
+bool Player::isGrounded(const glm::vec3 &dir) const
 {
-  glm::vec3 pos = getPosition();
-  glm::vec3 forward = m_camera.getTarget() - m_camera.getPosition();
-  pos += amount * glm::normalize(glm::vec3(forward.x, 0.0f, forward.z));
-  setPosition(pos);
-  glm::vec3 newTarget = pos + glm::normalize(forward);
-  updateCamera(pos, newTarget);
-  updateAABB();
+  const float horizontalTolerance = 0.4f;
+  return dir.y > 0.4f &&
+         std::abs(dir.x) < horizontalTolerance &&
+         std::abs(dir.z) < horizontalTolerance;
 }
 
-void Player::moveRight(float amount)
+void Player::jump(const glm::vec3 &force)
 {
-  glm::vec3 forward = m_camera.getTarget() - m_camera.getPosition();
-  glm::vec3 forwardDir = glm::normalize(glm::vec3(forward.x, 0.0f, forward.z));
-  glm::vec3 up = m_camera.getUp();
-  glm::vec3 right = glm::normalize(glm::cross(forwardDir, up));
-  glm::vec3 pos = getPosition();
-  pos += amount * right;
-  setPosition(pos);
-  glm::vec3 newTarget = pos + glm::normalize(forward);
-  updateCamera(pos, newTarget);
-  updateAABB();
+  if (m_isGrounded)
+  {
+    m_velocity = force;
+    m_isGrounded = false;
+  }
 }
 
-void Player::moveUp(float amount)
+void Player::updateCamera(const glm::vec3 &playerPosition, const glm::vec3 &direction)
 {
-  glm::vec3 pos = getPosition();
-  pos.y += amount;
-  setPosition(pos);
-  glm::vec3 newTarget = m_camera.getTarget() + glm::vec3(0.0f, amount, 0.0f);
-  updateCamera(pos, newTarget);
-  updateAABB();
+  m_camera.updateFromPlayer(playerPosition, direction);
 }
 
 void Player::pushBack(glm::vec3 direction, float strength)
@@ -240,17 +256,98 @@ void Player::pushBack(glm::vec3 direction, float strength)
   glm::vec3 pos = getPosition();
   pos += direction * strength;
   setPosition(pos);
-  glm::vec3 newTarget = m_camera.getTarget() + direction * strength;
-  updateCamera(pos, newTarget);
-  updateAABB();
+  updateCamera(pos, m_camera.getDirection());
 }
 
-void Player::updateCamera(const glm::vec3 &playerPosition, const glm::vec3 &playerTarget)
+void Player::update(float deltaTime, const std::vector<Vertex> &vertices, const glm::mat4 &modelMatrix)
 {
-  m_camera.updateFromPlayer(playerPosition, playerTarget);
+  const float stepSize = 0.005f / (deltaTime * 60.8f);
+
+  while (deltaTime > 0.0f)
+  {
+    float currentStep = std::min(stepSize, deltaTime);
+
+    applyGravity(currentStep);
+
+    glm::vec3 currentPosition = getPosition();
+
+    glm::vec3 verticalVelocity = glm::vec3(0.0f, m_velocity.y, 0.0f);
+    glm::vec3 verticalMove = verticalVelocity * currentStep * m_force;
+    glm::vec3 verticalPosition = currentPosition + verticalMove;
+
+    setPosition(verticalPosition);
+
+    glm::vec3 collisionNormal;
+    bool collidedY = checkCollisionWithTriangles(vertices, modelMatrix, collisionNormal);
+
+    // std::cout << "Collision Normal: " << glm::to_string(collisionNormal) << std::endl;
+
+    if (collidedY)
+    {
+      if (isGrounded(collisionNormal) && m_velocity.y <= 0.0f)
+      {
+        // std::cout << "Player is grounded." << std::endl;
+        m_isGrounded = true;
+        m_velocity.y = 0.0f;
+        setPosition(m_lastNotCollisionPosition);
+      }
+      else
+      {
+        setPosition(m_lastNotCollisionPosition);
+        m_velocity.y = 0.0f;
+        m_isGrounded = false;
+      }
+    }
+    else
+    {
+      m_isGrounded = false;
+      m_lastNotCollisionPosition = verticalPosition;
+    }
+
+    // === PHẦN 2: Di chuyển theo XZ (trục ngang) ===
+    glm::vec3 horizontalVelocity = glm::vec3(m_velocity.x, 0.0f, m_velocity.z);
+    glm::vec3 horizontalMove = horizontalVelocity * currentStep * m_force;
+    glm::vec3 horizontalPosition = getPosition() + horizontalMove;
+
+    setPosition(horizontalPosition);
+    // updateAABB();
+
+    bool collidedXZ = checkCollisionWithTriangles(vertices, modelMatrix, collisionNormal);
+
+    if (collidedXZ)
+    {
+      setPosition(m_lastNotCollisionPosition);
+    }
+    else
+    {
+      m_lastNotCollisionPosition = getPosition();
+    }
+
+    deltaTime -= currentStep;
+  }
+
+  // std::cout << "isGrounded: " << m_isGrounded << std::endl;
+  updateCamera(getPosition(), m_camera.getDirection());
+  // updateAABB();
+}
+
+void Player::setVelocity(const glm::vec3 &velocity)
+{
+  m_velocity.x = velocity.x;
+  m_velocity.z = velocity.z;
 }
 
 Camera &Player::getCamera()
 {
   return m_camera;
+}
+
+glm::vec3 Player::getVelocity() const
+{
+  return m_velocity;
+}
+
+bool Player::isGrounded() const
+{
+  return m_isGrounded;
 }
