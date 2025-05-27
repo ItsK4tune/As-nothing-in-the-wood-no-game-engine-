@@ -9,6 +9,11 @@
 #define RUNNING_SPEED 0.6f
 #define WALKING_SPEED 0.3f
 
+#define WALKING_SOUND_RADIUS 0.75f
+#define RUNNING_SOUND_RADIUS 1.0f
+#define SCREAMING_SOUND_RADIUS 1.5f
+#define INITIAL_RADIUS 0.0f
+
 Player *mainCharacter = nullptr;
 
 glm::vec3 objectRotation = glm::vec3(0.0f);
@@ -23,19 +28,6 @@ void mouseInput(GLFWwindow *window, double xpos, double ypos)
     Camera &camera = mainCharacter->getCamera();
     float pitch = camera.getPitch();
     float yaw = camera.getYaw();
-
-    // if (firstMouse)
-    // {
-    //     glm::vec3 dir = mainCharacter->getCamera().getTarget();
-    //     pitch = glm::degrees(asin(dir.y));
-    //     yaw = glm::degrees(atan2(dir.z, dir.x));
-    //     lastX = xpos;
-    //     lastY = ypos;
-    //     firstMouse = false;
-
-    //     camera.setPitchYaw(pitch, yaw);
-    //     return;
-    // }
 
     if (firstMouse)
     {
@@ -141,11 +133,11 @@ void normalMoveInput(GLFWwindow *window, std::vector<SoundPoint> &soundpoints, f
 
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && mainCharacter->isGrounded())
     {
-        mainCharacter->jump(glm::vec3(0.0f, 0.8f, 0.0f));
+        mainCharacter->jump();
         SoundPoint sp;
         sp.pos = mainCharacter->getPosition();
-        sp.maxValue = isRunning ? 1.0f : 0.75f;
-        sp.value = 0.f;
+        sp.maxValue = isRunning ? RUNNING_SOUND_RADIUS : WALKING_SOUND_RADIUS;
+        sp.value = INITIAL_RADIUS;
         sp.isGrowing = true;
         soundpoints.push_back(sp);
     }
@@ -165,8 +157,8 @@ void normalMoveInput(GLFWwindow *window, std::vector<SoundPoint> &soundpoints, f
     {
         SoundPoint sp;
         sp.pos = mainCharacter->getPosition();
-        sp.maxValue = isRunning ? 1.0f : 0.75f;
-        sp.value = 0.f;
+        sp.maxValue = isRunning ? RUNNING_SOUND_RADIUS : WALKING_SOUND_RADIUS;
+        sp.value = INITIAL_RADIUS;
         sp.isGrowing = true;
         soundpoints.push_back(sp);
 
@@ -190,8 +182,8 @@ void soundWaveInput(GLFWwindow *window, std::vector<SoundPoint> &soundpoints)
         {
             SoundPoint sp;
             sp.pos = mainCharacter->getPosition();
-            sp.maxValue = 1.5f;
-            sp.value = 0.4f;
+            sp.maxValue = SCREAMING_SOUND_RADIUS;
+            sp.value = INITIAL_RADIUS;
             sp.isGrowing = true;
             soundpoints.push_back(sp);
             wasPressed = true;

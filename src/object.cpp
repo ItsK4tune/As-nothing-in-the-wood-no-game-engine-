@@ -2,6 +2,10 @@
 #include "util/struct/struct.h"
 #include <iostream>
 
+#define BROAD_PHASE_DELTA 0.04f
+#define NARROW_PHASE_DELTA 0
+#define STEP_FACTOR 0.4f
+#define HORIZONTAL_TOLERANCE 0.4f
 #define GRAVITY 3.0f
 
 Object::Object(
@@ -112,7 +116,6 @@ bool Entity::checkCollisionAABB(const Entity &other) const
 
 bool Entity::pointInTriangle(const glm::vec3 &P, const glm::vec3 &A, const glm::vec3 &B, const glm::vec3 &C) const
 {
-  const float epsilon = 1e-5f;
   glm::vec3 v0 = C - A;
   glm::vec3 v1 = B - A;
   glm::vec3 v2 = P - A;
@@ -124,7 +127,7 @@ bool Entity::pointInTriangle(const glm::vec3 &P, const glm::vec3 &A, const glm::
   float d12 = glm::dot(v1, v2);
 
   float denom = d00 * d11 - d01 * d01;
-  if (fabs(denom) < epsilon)
+  if (fabs(denom) < NARROW_PHASE_DELTA)
     return false;
 
   float invDenom = 1.0f / denom;
@@ -132,7 +135,7 @@ bool Entity::pointInTriangle(const glm::vec3 &P, const glm::vec3 &A, const glm::
   float u = (d11 * d02 - d01 * d12) * invDenom;
   float v = (d00 * d12 - d01 * d02) * invDenom;
 
-  return (u >= -epsilon) && (v >= -epsilon) && (u + v <= 1.0f + epsilon);
+  return (u + NARROW_PHASE_DELTA >= 0) && (v + NARROW_PHASE_DELTA >= 0) && (u + v <= 1.0f + NARROW_PHASE_DELTA);
 }
 
 bool Entity::checkCollisionWithTriangles(const std::vector<Vertex> &vertices, const glm::mat4 &modelMatrix, glm::vec3 &outNormal)
@@ -153,11 +156,9 @@ bool Entity::checkCollisionWithTriangles(const std::vector<Vertex> &vertices, co
     glm::vec3 triMin = glm::min(glm::min(v0, v1), v2);
     glm::vec3 triMax = glm::max(glm::max(v0, v1), v2);
 
-    float delta = 0.2f;
-
-    if (!(m_aabbMax.x + delta < triMin.x || m_aabbMin.x - delta > triMax.x ||
-          m_aabbMax.y + delta < triMin.y || m_aabbMin.y - delta > triMax.y ||
-          m_aabbMax.z + delta < triMin.z || m_aabbMin.z - delta > triMax.z))
+    if (!(m_aabbMax.x + BROAD_PHASE_DELTA < triMin.x || m_aabbMin.x - BROAD_PHASE_DELTA > triMax.x ||
+          m_aabbMax.y + BROAD_PHASE_DELTA < triMin.y || m_aabbMin.y - BROAD_PHASE_DELTA > triMax.y ||
+          m_aabbMax.z + BROAD_PHASE_DELTA < triMin.z || m_aabbMin.z - BROAD_PHASE_DELTA > triMax.z))
     {
       auto &entityVertices = getMesh().vertices;
 
@@ -176,12 +177,8 @@ bool Entity::checkCollisionWithTriangles(const std::vector<Vertex> &vertices, co
       {
         for (auto &v : entityVertices)
         {
-          if (pointInTriangle(v.pos, v0, v1, v2))
+          if (pointInTriangle(v.pos + getPosition(), v0, v1, v2))
           {
-            // std::cout << "Collision detected with triangle: "
-            //           << "v0: " << glm::to_string(v0) << ", "
-            //           << "v1: " << glm::to_string(v1) << ", "
-            //           << "v2: " << glm::to_string(v2) << "vertex: " << glm::to_string(v.pos) << std::endl;
             glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
             glm::vec3 toCenter = glm::normalize(center - v0);
             float cosTheta = glm::dot(normal, toCenter);
@@ -231,17 +228,16 @@ void Player::applyGravity(float deltaTime)
 
 bool Player::isGrounded(const glm::vec3 &dir) const
 {
-  const float horizontalTolerance = 0.4f;
   return dir.y > 0.4f &&
-         std::abs(dir.x) < horizontalTolerance &&
-         std::abs(dir.z) < horizontalTolerance;
+         std::abs(dir.x) < HORIZONTAL_TOLERANCE &&
+         std::abs(dir.z) < HORIZONTAL_TOLERANCE;
 }
 
-void Player::jump(const glm::vec3 &force)
+void Player::jump()
 {
   if (m_isGrounded)
   {
-    m_velocity = force;
+    m_velocity = glm::vec3(m_velocity.x, 1.0f, m_velocity.z);
     m_isGrounded = false;
   }
 }
@@ -261,7 +257,7 @@ void Player::pushBack(glm::vec3 direction, float strength)
 
 void Player::update(float deltaTime, const std::vector<Vertex> &vertices, const glm::mat4 &modelMatrix)
 {
-  const float stepSize = 0.005f / (deltaTime * 60.8f);
+  const float stepSize = STEP_FACTOR / deltaTime;
 
   while (deltaTime > 0.0f)
   {
@@ -272,21 +268,17 @@ void Player::update(float deltaTime, const std::vector<Vertex> &vertices, const 
     glm::vec3 currentPosition = getPosition();
 
     glm::vec3 verticalVelocity = glm::vec3(0.0f, m_velocity.y, 0.0f);
-    glm::vec3 verticalMove = verticalVelocity * currentStep * m_force;
+    glm::vec3 verticalMove = verticalVelocity * currentStep * m_forceY;
     glm::vec3 verticalPosition = currentPosition + verticalMove;
 
     setPosition(verticalPosition);
-
     glm::vec3 collisionNormal;
     bool collidedY = checkCollisionWithTriangles(vertices, modelMatrix, collisionNormal);
-
-    // std::cout << "Collision Normal: " << glm::to_string(collisionNormal) << std::endl;
 
     if (collidedY)
     {
       if (isGrounded(collisionNormal) && m_velocity.y <= 0.0f)
       {
-        // std::cout << "Player is grounded." << std::endl;
         m_isGrounded = true;
         m_velocity.y = 0.0f;
         setPosition(m_lastNotCollisionPosition);
@@ -301,20 +293,33 @@ void Player::update(float deltaTime, const std::vector<Vertex> &vertices, const 
     else
     {
       m_isGrounded = false;
-      m_lastNotCollisionPosition = verticalPosition;
+      m_lastNotCollisionPosition = getPosition();
     }
 
-    // === PHẦN 2: Di chuyển theo XZ (trục ngang) ===
-    glm::vec3 horizontalVelocity = glm::vec3(m_velocity.x, 0.0f, m_velocity.z);
-    glm::vec3 horizontalMove = horizontalVelocity * currentStep * m_force;
-    glm::vec3 horizontalPosition = getPosition() + horizontalMove;
+    glm::vec3 xVelocity = glm::vec3(m_velocity.x, 0.0f, 0.0f);
+    glm::vec3 xMove = xVelocity * currentStep * m_forceXZ;
+    glm::vec3 xPosition = getPosition() + xMove;
 
-    setPosition(horizontalPosition);
-    // updateAABB();
+    setPosition(xPosition);
+    bool collidedX = checkCollisionWithTriangles(vertices, modelMatrix, collisionNormal);
 
-    bool collidedXZ = checkCollisionWithTriangles(vertices, modelMatrix, collisionNormal);
+    if (collidedX)
+    {
+      setPosition(m_lastNotCollisionPosition);
+    }
+    else
+    {
+      m_lastNotCollisionPosition = getPosition();
+    }
 
-    if (collidedXZ)
+    glm::vec3 zVelocity = glm::vec3(0.0f, 0.0f, m_velocity.z);
+    glm::vec3 zMove = zVelocity * currentStep * m_forceXZ;
+    glm::vec3 zPosition = getPosition() + zMove;
+
+    setPosition(zPosition);
+    bool collidedZ = checkCollisionWithTriangles(vertices, modelMatrix, collisionNormal);
+
+    if (collidedZ)
     {
       setPosition(m_lastNotCollisionPosition);
     }
@@ -326,9 +331,7 @@ void Player::update(float deltaTime, const std::vector<Vertex> &vertices, const 
     deltaTime -= currentStep;
   }
 
-  // std::cout << "isGrounded: " << m_isGrounded << std::endl;
   updateCamera(getPosition(), m_camera.getDirection());
-  // updateAABB();
 }
 
 void Player::setVelocity(const glm::vec3 &velocity)
