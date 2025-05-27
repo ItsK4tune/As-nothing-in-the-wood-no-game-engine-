@@ -4,8 +4,7 @@
 #include <sstream>
 
 #include "util/init.h"
-#include "util/line.h"
-#include "util/object.h"
+#include "util/struct.h"
 #include "util/camera.h"
 #include "util/input.h"
 #include "util/loadShader.h"
@@ -94,6 +93,7 @@ int main()
         std::vector<float> radii;
         std::vector<float> maxRadii;
         std::vector<bool> isGrowings;
+        std::vector<glm::vec3> colors;
 
         for (int i = 0; i < std::min((int)SoundPoints.size(), MAX_SOUND_POINTS); ++i)
         {
@@ -101,6 +101,7 @@ int main()
             radii.push_back(SoundPoints[i].value);
             maxRadii.push_back(SoundPoints[i].maxValue);
             isGrowings.push_back(SoundPoints[i].isGrowing);
+            colors.push_back(SoundPoints[i].color);
         }
 
         box.setShader(boxFace);
@@ -111,6 +112,7 @@ int main()
         box.getShader().setMat4("projection", projection);
         box.getShader().setInt("soundCount", positions.size());
         box.getShader().setVec3Array("soundPositions", positions);
+        box.getShader().setVec3Array("soundColors", colors);
         box.getShader().setFloatArray("soundRadii", radii);
         box.getShader().setFloatArray("soundMaxRadii", maxRadii);
         box.getShader().setBoolArray("soundIsGrowing", isGrowings);
@@ -126,6 +128,7 @@ int main()
         box.getShader().setMat4("projection", projection);
         box.getShader().setInt("soundCount", positions.size());
         box.getShader().setVec3Array("soundPositions", positions);
+        box.getShader().setVec3Array("soundColors", colors);
         box.getShader().setFloatArray("soundRadii", radii);
         box.getShader().setFloatArray("soundMaxRadii", maxRadii);
         box.getShader().setBool("useColor", 0);
@@ -139,6 +142,7 @@ int main()
         player.getShader().setMat4("projection", projection);
         player.getShader().setInt("soundCount", positions.size());
         player.getShader().setVec3Array("soundPositions", positions);
+        player.getShader().setVec3Array("soundColors", colors);
         player.getShader().setFloatArray("soundRadii", radii);
         player.getShader().setFloatArray("soundMaxRadii", maxRadii);
         player.getShader().setBool("useColor", 0);

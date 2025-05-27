@@ -7,6 +7,6 @@
 #include <iostream>
 #include <glm/glm.hpp>
 
-#include "util/struct/struct.h"
+#include "util/struct/basic.h"
 
 void loadVertexFile(const std::string &filepath, std::vector<Vertex> &vertices);

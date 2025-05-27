@@ -2,7 +2,6 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 glm::mat4 createRotationMatrix(glm::vec3 rotationRadians);
 glm::mat4 createTranslationMatrix(glm::vec3 translation);

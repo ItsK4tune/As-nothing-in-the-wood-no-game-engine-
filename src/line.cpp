@@ -1,5 +1,4 @@
-#include "util/line.h"
-#include "util/struct/struct.h"
+#include "util/struct/line.h"
 
 Line::Line(
     const Mesh &mesh,

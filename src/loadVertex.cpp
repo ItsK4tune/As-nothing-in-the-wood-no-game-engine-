@@ -1,5 +1,4 @@
 #include "util/loadVertex.h"
-#include "util/struct/struct.h"
 
 void loadVertexFile(const std::string &filepath, std::vector<Vertex> &vertices)
 {

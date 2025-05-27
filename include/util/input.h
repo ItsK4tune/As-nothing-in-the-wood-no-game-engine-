@@ -2,9 +2,10 @@
 
 #include <GLFW/glfw3.h>
 #include <vector>
-#include "util/object.h"
 
+#include "util/struct/player.h"
 #include "util/struct/soundPoint.h"
+#include "util/affine.h"
 
 extern Player *mainCharacter;
 extern glm::mat4 model;

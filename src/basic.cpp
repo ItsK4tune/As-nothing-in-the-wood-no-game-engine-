@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cstdlib>
 
-#include "util/struct/struct.h"
+#include "util/struct/basic.h"
 #include "util/loadShader.h"
 
 Mesh::Mesh(const std::vector<Vertex> &verts)

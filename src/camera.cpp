@@ -1,5 +1,4 @@
 #include "util/camera.h"
-#include <iostream>
 
 Camera::Camera(const glm::vec3 &position,
                const glm::vec3 &direction,
@@ -47,10 +46,6 @@ void Camera::updateFromPlayer(const glm::vec3 &playerPosition, const glm::vec3 &
 
     m_position = finalPosition;
 
-    // glm::vec3 look = playerPosition - m_position;
-    // m_direction = glm::length(look) < 0.0001f
-    //                   ? glm::normalize(playerDirection)
-    //                   : glm::normalize(look);
     m_direction = glm::normalize(playerDirection);
 }
 float Camera::getPitch() const { return pitch; }

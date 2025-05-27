@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/struct/struct.h"
+#include "basic.h"
 
 class Line
 {

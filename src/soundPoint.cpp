@@ -1,5 +1,4 @@
 #include "util/struct/soundPoint.h"
-#include <cmath>
 
 bool SoundPoint::update(float deltaTime)
 {
