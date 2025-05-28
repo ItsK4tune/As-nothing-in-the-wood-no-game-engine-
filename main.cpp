@@ -10,16 +10,14 @@
 #include "util/loadShader.h"
 #include "util/loadVertex.h"
 
-#include "util/struct/soundPoint.h"
-
 int main()
 {
-    GLFWwindow *window = createWindow(800, 16.0f / 9.0f);
+    GLFWwindow *window = createWindow(1920, 16.0f / 9.0f);
     configWindow(window);
 
-    Player player(glm::vec3(0.0f, 0.0f, 0.0f));
-    player.setPosition(glm::vec3(0.5f, 0.5f, 0.5f));
-    player.getCamera().setRelativeOffset(glm::vec3(0.0f, 0.0f, 0.0f));
+    Player player(glm::vec3(0.5f, 0.5f, 0.5f));
+    player.getCamera().setRelativeOffset(glm::vec3(0.0f, 0.1f, 0.0f));
+    // player.getCamera().set(Camera::ProjectionType::Perspective);
     mainCharacter = &player;
 
     std::vector<Vertex> playerVertices;
@@ -28,6 +26,14 @@ int main()
     player.setMesh(playerMesh);
     Shader playerOutline("outline/basic.vert", "outline/basic.frag", "outline/basic.geom");
     player.setShader(playerOutline);
+
+    NormalEnemy enemy(glm::vec3(0.5f, 0.5f, 0.5f));
+    std::vector<Vertex> enemyVertices;
+    loadVertexFile("player.vertex", enemyVertices);
+    Mesh enemyMesh(enemyVertices);
+    enemy.setMesh(enemyMesh);
+    Shader enemyOutline("outline/basic.vert", "outline/basic.frag", "outline/basic.geom");
+    enemy.setShader(playerOutline);
 
     Object box;
 
@@ -44,7 +50,7 @@ int main()
 
     float lastFrame = glfwGetTime();
 
-    std::vector<SoundPoint> SoundPoints;
+    std::vector<SoundPoint> soundPoints;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -69,10 +75,11 @@ int main()
         glfwGetCursorPos(window, &xpos, &ypos);
 
         mouseInput(window, xpos, ypos);
-        normalMoveInput(window, SoundPoints, deltaTime);
+        normalMoveInput(window, soundPoints, deltaTime);
         exitInput(window);
-        soundWaveInput(window, SoundPoints);
+        soundWaveInput(window, soundPoints);
         player.update(deltaTime, vertices, model);
+        enemy.update(deltaTime, vertices, model, soundPoints, player.getPosition());
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
@@ -80,10 +87,10 @@ int main()
         glm::mat4 view = player.getCamera().getViewMatrix();
         glm::mat4 projection = player.getCamera().getProjectionMatrix();
 
-        for (auto it = SoundPoints.begin(); it != SoundPoints.end();)
+        for (auto it = soundPoints.begin(); it != soundPoints.end();)
         {
             if (!it->update(deltaTime))
-                it = SoundPoints.erase(it);
+                it = soundPoints.erase(it);
             else
                 ++it;
         }
@@ -95,13 +102,13 @@ int main()
         std::vector<bool> isGrowings;
         std::vector<glm::vec3> colors;
 
-        for (int i = 0; i < std::min((int)SoundPoints.size(), MAX_SOUND_POINTS); ++i)
+        for (int i = 0; i < std::min((int)soundPoints.size(), MAX_SOUND_POINTS); ++i)
         {
-            positions.push_back(SoundPoints[i].pos);
-            radii.push_back(SoundPoints[i].value);
-            maxRadii.push_back(SoundPoints[i].maxValue);
-            isGrowings.push_back(SoundPoints[i].isGrowing);
-            colors.push_back(SoundPoints[i].color);
+            positions.push_back(soundPoints[i].pos);
+            radii.push_back(soundPoints[i].value);
+            maxRadii.push_back(soundPoints[i].maxValue);
+            isGrowings.push_back(soundPoints[i].isGrowing);
+            colors.push_back(soundPoints[i].color);
         }
 
         box.setShader(boxFace);
@@ -148,6 +155,20 @@ int main()
         player.getShader().setBool("useColor", 0);
 
         player.draw();
+
+        enemy.use();
+
+        enemy.getShader().setMat4("model", glm::translate(glm::mat4(1.0f), enemy.getPosition()) * enemy.getRotation() * enemy.getScale());
+        enemy.getShader().setMat4("view", view);
+        enemy.getShader().setMat4("projection", projection);
+        enemy.getShader().setInt("soundCount", positions.size());
+        enemy.getShader().setVec3Array("soundPositions", positions);
+        enemy.getShader().setVec3Array("soundColors", colors);
+        enemy.getShader().setFloatArray("soundRadii", radii);
+        enemy.getShader().setFloatArray("soundMaxRadii", maxRadii);
+        enemy.getShader().setBool("useColor", 0);
+
+        enemy.draw();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -18,7 +18,7 @@ public:
            const glm::vec3 &up = glm::vec3(0.0f, 1.0f, 0.0f),
            float fovDegrees = 90.0f,
            float aspectRatio = 16.0f / 9.0f,
-           float nearPlane = 0.1f,
+           float nearPlane = 0.01f,
            float farPlane = 1000.0f);
 
     void setPosition(const glm::vec3 &position);

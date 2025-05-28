@@ -22,7 +22,7 @@ private:
     Camera m_camera;
     glm::vec3 m_velocity = glm::vec3(0.0f);
     bool m_isGrounded = false;
-    glm::vec3 m_lastNotCollisionPosition = getPosition();
+    glm::vec3 m_lastNotCollisionPosition;
     float m_forceXZ = 2.0f;
     float m_forceY = 2.0f;
 

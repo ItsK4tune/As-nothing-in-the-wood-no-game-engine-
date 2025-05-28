@@ -5,11 +5,11 @@
 #define GRAVITY 3.0f
 
 Player::Player(const glm::vec3 &startPosition)
-    : m_camera(startPosition)
 {
     glm::vec3 pos = getPosition();
     glm::vec3 direction = m_camera.getDirection();
     updateCamera(pos, direction);
+    m_lastNotCollisionPosition = startPosition;
 }
 
 void Player::applyGravity(float deltaTime)

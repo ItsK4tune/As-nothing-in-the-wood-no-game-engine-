@@ -1,6 +1,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/intersect.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "object.h"
@@ -36,4 +38,5 @@ private:
     glm::mat4 m_scale = glm::mat4(1.0f);
 
     bool pointInTriangle(const glm::vec3 &P, const glm::vec3 &A, const glm::vec3 &B, const glm::vec3 &C) const;
+    bool hasLineOfSight(const glm::vec3 &start, const glm::vec3 &end, const glm::mat4 &modelMatrix, const glm::vec3 &A, const glm::vec3 &B, const glm::vec3 &C);
 };

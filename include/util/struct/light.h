@@ -4,6 +4,12 @@
 
 #include "util/struct/object.h"
 
+enum class LightType
+{
+    Point,
+    Directional
+};
+
 class Light : public Object
 {
 public:

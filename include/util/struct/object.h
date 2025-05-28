@@ -40,31 +40,3 @@ private:
     Material m_material;
     Shader m_shader;
 };
-
-enum class LightType
-{
-    Point,
-    Directional
-};
-
-// class NormalEnemy : public Entity
-// {
-//     NormalEnemy(const glm::vec3 &startPosition);
-
-// public:
-//     void pushBack(glm::vec3 direction, float strength);
-//     void update(float deltaTime, const std::vector<Vertex> &vertices, const glm::mat4 &modelMatrix);
-//     void setVelocity(const glm::vec3 &velocity);
-
-//     glm::vec3 getVelocity() const;
-
-// private:
-//     glm::vec3 m_velocity = glm::vec3(0.0f);
-//     bool m_isGrounded = false;
-//     glm::vec3 m_lastNotCollisionPosition = getPosition();
-//     float m_forceXZ = 2.0f;
-//     float m_forceY = 2.0f;
-
-//     void applyGravity(float deltaTime);
-//     bool isGrounded(const glm::vec3 &direction) const;
-// };

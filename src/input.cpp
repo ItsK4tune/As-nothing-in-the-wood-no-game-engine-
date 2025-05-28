@@ -135,7 +135,7 @@ void normalMoveInput(GLFWwindow *window, std::vector<SoundPoint> &soundpoints, f
         mainCharacter->jump();
         SoundPoint sp;
         sp.pos = mainCharacter->getPosition();
-        sp.color = glm::vec3(1.0, 1.0, 0.0);
+        sp.color = glm::vec3(0.0, 1.0, 0.0);
         sp.maxValue = isRunning ? RUNNING_SOUND_RADIUS : WALKING_SOUND_RADIUS;
         sp.value = INITIAL_RADIUS;
         sp.isGrowing = true;
@@ -183,7 +183,7 @@ void soundWaveInput(GLFWwindow *window, std::vector<SoundPoint> &soundpoints)
         {
             SoundPoint sp;
             sp.pos = mainCharacter->getPosition();
-            sp.color = glm::vec3(1.0, 0.0, 0.0);
+            sp.color = glm::vec3(0.0, 1.0, 0.0);
             sp.maxValue = SCREAMING_SOUND_RADIUS;
             sp.value = INITIAL_RADIUS;
             sp.isGrowing = true;

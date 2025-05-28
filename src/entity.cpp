@@ -1,6 +1,6 @@
 #include "util/struct/entity.h"
 
-#define BROAD_PHASE_DELTA 0.04f
+#define BROAD_PHASE_DELTA 0.01f
 #define NARROW_PHASE_DELTA 0
 
 Entity::Entity(
@@ -16,7 +16,7 @@ Entity::Entity(
 
 void Entity::setPosition(const glm::vec3 &position)
 {
-    glm::vec3 oldPosition = getPosition();
+    // glm::vec3 oldPosition = getPosition();
     Object::setPosition(position);
     updateAABB();
 }
@@ -129,7 +129,7 @@ bool Entity::checkCollisionWithTriangles(const std::vector<Vertex> &vertices, co
             {
                 for (auto &v : entityVertices)
                 {
-                    if (pointInTriangle(v.pos + getPosition(), v0, v1, v2))
+                    if (!hasLineOfSight(getPosition(), v.pos + getPosition(), modelMatrix, v0, v1, v2))
                     {
                         glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
                         glm::vec3 toCenter = glm::normalize(center - v0);
@@ -163,4 +163,27 @@ glm::mat4 Entity::getRotation() const
 glm::mat4 Entity::getScale() const
 {
     return m_scale;
+}
+
+bool Entity::hasLineOfSight(const glm::vec3 &start, const glm::vec3 &end, const glm::mat4 &modelMatrix, const glm::vec3 &A, const glm::vec3 &B, const glm::vec3 &C)
+{
+    glm::vec3 dir = end - start;
+    float maxDistance = glm::length(dir);
+    if (maxDistance < 1e-4f)
+        return true;
+
+    dir = glm::normalize(dir);
+
+    glm::vec2 uv;
+    float distance;
+
+    if (glm::intersectRayTriangle(start, dir, A, B, C, uv, distance))
+    {
+        if (distance > 0.0f && distance < maxDistance)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
